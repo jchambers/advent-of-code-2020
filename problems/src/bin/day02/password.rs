@@ -31,7 +31,7 @@ pub fn parse(password_db_line:&str) -> Result<(PasswordPolicy, &str), Box<dyn er
     }, password))
 }
 
-pub fn is_valid(policy: PasswordPolicy, password: &str) -> bool {
+pub fn is_valid_part1(policy: PasswordPolicy, password: &str) -> bool {
     let mut char_count = 0;
 
     for c in password.chars() {
@@ -41,6 +41,12 @@ pub fn is_valid(policy: PasswordPolicy, password: &str) -> bool {
     }
 
     char_count >= policy.min && char_count <= policy.max
+}
+
+pub fn is_valid_part2(policy: PasswordPolicy, password: &str) -> bool {
+    let chars: Vec<char> = password.chars().collect();
+
+    (chars[policy.min as usize - 1] == policy.character) ^ (chars[policy.max as usize - 1] == policy.character)
 }
 
 #[cfg(test)]
@@ -62,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    fn is_valid() {
+    fn is_valid_part1() {
         {
             let policy = PasswordPolicy {
                 character: 'a',
@@ -70,7 +76,7 @@ mod tests {
                 max: 3
             };
 
-            assert_eq!(true, password::is_valid(policy, "abcde"));
+            assert_eq!(true, password::is_valid_part1(policy, "abcde"));
         }
 
         {
@@ -80,7 +86,40 @@ mod tests {
                 max: 3
             };
 
-            assert_eq!(false, password::is_valid(policy, "cdefg"));
+            assert_eq!(false, password::is_valid_part1(policy, "cdefg"));
+        }
+    }
+
+    #[test]
+    fn is_valid_part2() {
+        {
+            let policy = PasswordPolicy {
+                character: 'a',
+                min: 1,
+                max: 3
+            };
+
+            assert_eq!(true, password::is_valid_part2(policy, "abcde"));
+        }
+
+        {
+            let policy = PasswordPolicy {
+                character: 'b',
+                min: 1,
+                max: 3
+            };
+
+            assert_eq!(false, password::is_valid_part2(policy, "cdefg"));
+        }
+
+        {
+            let policy = PasswordPolicy {
+                character: 'c',
+                min: 2,
+                max: 9
+            };
+
+            assert_eq!(false, password::is_valid_part2(policy, "ccccccccc"));
         }
     }
 }
