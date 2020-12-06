@@ -14,11 +14,22 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
         entries.sort();
 
-        for i in 0..(entries.len() - 1) {
-            for j in i..entries.len() {
+        for i in 0..(entries.len() - 2) {
+            for j in i..(entries.len() - 1) {
                 if entries[i] + entries[j] == 2020 {
                     println!("{} * {} = {}", entries[i], entries[j], entries[i] * entries[j]);
-                    return Ok(());
+                }
+            }
+        }
+
+        for i in 0..(entries.len() - 2) {
+            for j in i..(entries.len() - 1) {
+                for k in j..entries.len() {
+                    if entries[i] + entries[j] + entries[k] == 2020 {
+                        println!("{} * {} * {} = {}", entries[i], entries[j], entries[k],
+                                 entries[i] * entries[j] * entries[k]);
+                        return Ok(());
+                    }
                 }
             }
         }
