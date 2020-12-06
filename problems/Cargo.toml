@@ -9,3 +9,4 @@ name = "day01"
 
 [dependencies]
 simple-error = "0.2.2"
+ksum = { path = "../ksum" }
