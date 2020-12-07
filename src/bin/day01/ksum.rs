@@ -59,7 +59,7 @@ fn advance_right(numbers: &[i32], right: &mut usize) {
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
-    use crate::ksum;
+    use crate::ksum::ksum;
 
     #[test]
     #[should_panic]

@@ -1,8 +1,8 @@
+mod ksum;
+
 use std::{env, io, error};
 use std::fs::File;
 use std::io::BufRead;
-
-use ksum;
 
 fn main() -> Result<(), Box<dyn error::Error>> {
     let args: Vec<String> = env::args().collect();
