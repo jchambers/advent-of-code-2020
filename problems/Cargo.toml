@@ -10,6 +10,9 @@ name = "day01"
 [[bin]]
 name = "day02"
 
+[[bin]]
+name = "day03"
+
 [dependencies]
 simple-error = "0.2.2"
 ksum = { path = "../ksum" }
