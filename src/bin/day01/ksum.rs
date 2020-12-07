@@ -9,7 +9,7 @@ pub fn ksum(numbers: &[i32], k: usize, target: i32) -> HashSet<Vec<i32>> {
     if k == 1 {
         for n in numbers {
             if *n == target {
-                solutions.insert(vec![numbers[*n as usize]]);
+                solutions.insert(vec![*n]);
             }
         }
     } else if k == 2 {
@@ -77,9 +77,9 @@ mod tests {
     fn one_sum() {
         {
             let mut expected = HashSet::new();
-            expected.insert(vec![2]);
+            expected.insert(vec![4]);
 
-            assert_eq!(expected, ksum(&[1, 2, 2, 2, 3, 4], 1, 2));
+            assert_eq!(expected, ksum(&[1, 2, 2, 2, 3, 4], 1, 4));
         }
 
         assert_eq!(0, ksum(&[1, 2, 2, 2, 3, 4], 1, 5).len());
