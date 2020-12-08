@@ -1,5 +1,17 @@
 use std::collections::HashMap;
 
+lazy_static! {
+    static ref REQUIRED_FIELDS:[String;7] = [
+        String::from("byr"),
+        String::from("iyr"),
+        String::from("eyr"),
+        String::from("hgt"),
+        String::from("hcl"),
+        String::from("ecl"),
+        String::from("pid"),
+    ];
+}
+
 pub fn parse(passport: String) -> HashMap<String, String> {
     let mut parsed = HashMap::new();
 
@@ -16,8 +28,8 @@ pub fn parse(passport: String) -> HashMap<String, String> {
     parsed
 }
 
-pub fn is_valid(passport: &HashMap<String, String>, required_fields: &[String]) -> bool {
-    for required_field in required_fields.iter() {
+pub fn has_required_fields(passport: &HashMap<String, String>) -> bool {
+    for required_field in REQUIRED_FIELDS.iter() {
         if !passport.contains_key(required_field) {
             return false;
         }
@@ -36,38 +48,28 @@ mod test {
         let passport = "ecl:gry pid:860033327 eyr:2020 hcl:#fffffd\nbyr:1937 iyr:2017 cid:147 hgt:183cm".to_string();
 
         let mut expected = HashMap::new();
-        expected.insert("ecl".to_string(), "gry".to_string());
-        expected.insert("pid".to_string(), "860033327".to_string());
-        expected.insert("eyr".to_string(), "2020".to_string());
-        expected.insert("hcl".to_string(), "#fffffd".to_string());
-        expected.insert("byr".to_string(), "1937".to_string());
-        expected.insert("iyr".to_string(), "2017".to_string());
-        expected.insert("cid".to_string(), "147".to_string());
-        expected.insert("hgt".to_string(), "183cm".to_string());
+        expected.insert(String::from("ecl"), String::from("gry"));
+        expected.insert(String::from("pid"), String::from("860033327"));
+        expected.insert(String::from("eyr"), String::from("2020"));
+        expected.insert(String::from("hcl"), String::from("#fffffd"));
+        expected.insert(String::from("byr"), String::from("1937"));
+        expected.insert(String::from("iyr"), String::from("2017"));
+        expected.insert(String::from("cid"), String::from("147"));
+        expected.insert(String::from("hgt"), String::from("183cm"));
 
         assert_eq!(expected, passport::parse(passport));
     }
 
     #[test]
-    fn is_valid() {
-        let required_fields = [
-            "byr".to_string(),
-            "iyr".to_string(),
-            "eyr".to_string(),
-            "hgt".to_string(),
-            "hcl".to_string(),
-            "ecl".to_string(),
-            "pid".to_string(),
-        ];
-
+    fn has_required_fields() {
         {
             let passport = passport::parse("ecl:gry pid:860033327 eyr:2020 hcl:#fffffd\nbyr:1937 iyr:2017 cid:147 hgt:183cm".to_string());
-            assert!(passport::is_valid(&passport, &required_fields));
+            assert!(passport::has_required_fields(&passport));
         }
 
         {
             let passport = passport::parse("pid:860033327 eyr:2020 hcl:#fffffd\nbyr:1937 iyr:2017 cid:147 hgt:183cm".to_string());
-            assert!(!passport::is_valid(&passport, &required_fields));
+            assert!(!passport::has_required_fields(&passport));
         }
     }
 }
