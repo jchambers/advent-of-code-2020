@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate lazy_static;
-
 use std::{env, error, io};
 use std::fs::File;
 use std::io::BufRead;
@@ -15,8 +12,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             let file = File::open(path)?;
 
             if let Some(max_id) = io::BufReader::new(file).lines()
-                .filter_map(|line| seating::Seat::from_code(line.unwrap().as_str()).ok())
-                .map(|seat| seat.get_id())
+                .map(|line| seating::Seat::from_code(line.unwrap().as_str()).get_id())
                 .max() {
                 println!("Max seat ID: {}", max_id);
             } else {
@@ -28,7 +24,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             let file = File::open(path)?;
 
             let mut candidate_seats: Vec<u32> = io::BufReader::new(file).lines()
-                .filter_map(|line| seating::Seat::from_code(line.unwrap().as_str()).ok())
+                .map(|line| seating::Seat::from_code(line.unwrap().as_str()))
                 .filter(|seat| seat.row != 0 && seat.row != 127)
                 .map(|seat| seat.get_id())
                 .collect();

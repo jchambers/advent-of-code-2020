@@ -1,6 +1,3 @@
-use regex::Regex;
-use std::error;
-
 #[derive(Debug, PartialEq)]
 pub struct Seat {
     pub row: u8,
@@ -8,37 +5,21 @@ pub struct Seat {
 }
 
 impl Seat {
-    pub fn from_code(code: &str) -> Result<Seat, Box<dyn error::Error>> {
-        lazy_static! {
-            static ref SEAT_CODE_RE: Regex = Regex::new("^[BF]{7}[LR]{3}$").unwrap();
-        }
+    pub fn from_code(boarding_pass: &str) -> Seat {
+        let mut code:u32 = 0;
 
-        if !SEAT_CODE_RE.is_match(code) {
-            simple_error::bail!("Invalid seat code: {}", code);
-        }
+        for c in boarding_pass.chars() {
+            code <<= 1;
 
-        let mut row: u8 = 0;
-        let mut col: u8 = 0;
-
-        let chars: Vec<char> = code.chars().collect();
-
-        for i in 0..7 {
-            row <<= 1;
-
-            if chars[i] == 'B' {
-                row |= 1;
+            if c == 'B' || c == 'R' {
+                code |= 1;
             }
         }
 
-        for i in 7..10 {
-            col <<= 1;
-
-            if chars[i] == 'R' {
-                col |= 1;
-            }
+        Seat {
+            row: (code >> 3) as u8,
+            col: (code & 0b111) as u8
         }
-
-        Ok(Seat { row, col })
     }
 
     pub fn get_id(&self) -> u32 {
@@ -52,11 +33,7 @@ mod test {
 
     #[test]
     fn from_code() {
-        if let Ok(seat) = Seat::from_code("FBFBBFFRLR") {
-            assert_eq!(Seat { row: 44, col: 5}, seat);
-        } else {
-            assert!(false)
-        }
+        assert_eq!(Seat { row: 44, col: 5}, Seat::from_code("FBFBBFFRLR"));
     }
 
     #[test]
