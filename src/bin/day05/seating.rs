@@ -3,8 +3,8 @@ use std::error;
 
 #[derive(Debug, PartialEq)]
 pub struct Seat {
-    row: u8,
-    col: u8,
+    pub row: u8,
+    pub col: u8,
 }
 
 impl Seat {
