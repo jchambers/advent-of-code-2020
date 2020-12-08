@@ -19,6 +19,9 @@ name = "day04"
 [[bin]]
 name = "day05"
 
+[[bin]]
+name = "day06"
+
 [dependencies]
 lazy_static = "1.4.0"
 regex = "1.4.2"
