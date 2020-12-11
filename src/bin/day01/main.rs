@@ -1,5 +1,3 @@
-mod ksum;
-
 use std::{env, io, error};
 use std::fs::File;
 use std::io::BufRead;

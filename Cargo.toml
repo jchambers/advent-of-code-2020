@@ -22,7 +22,14 @@ name = "day05"
 [[bin]]
 name = "day06"
 
+[[bin]]
+name = "day08"
+
+[[bin]]
+name = "day09"
+
 [dependencies]
 lazy_static = "1.4.0"
 regex = "1.4.2"
 simple-error = "0.2.2"
+ksum = {path = "./src/ksum"}

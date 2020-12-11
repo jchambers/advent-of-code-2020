@@ -4,6 +4,7 @@
 name = "advent-of-code-2020"
 version = "0.1.0"
 dependencies = [
+ "ksum",
  "lazy_static",
  "regex",
  "simple-error",
@@ -17,6 +18,10 @@ checksum = "7404febffaa47dac81aa44dba71523c9d069b1bdc50a77db41195149e17f68e5"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "ksum"
+version = "0.1.0"
 
 [[package]]
 name = "lazy_static"
