@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-pub fn ksum(numbers: &[i32], k: usize, target: i32) -> HashSet<Vec<i32>> {
+pub fn ksum(numbers: &[i64], k: usize, target: i64) -> HashSet<Vec<i64>> {
     assert!(k > 0, "K must be positive");
     assert!(numbers.len() >= k, "Number list must be longer than k");
 
@@ -40,7 +40,7 @@ pub fn ksum(numbers: &[i32], k: usize, target: i32) -> HashSet<Vec<i32>> {
     solutions
 }
 
-fn advance_left(numbers: &[i32], left: &mut usize) {
+fn advance_left(numbers: &[i64], left: &mut usize) {
     let initial_left_value = numbers[*left];
 
     while numbers[*left] == initial_left_value && *left < numbers.len() {
@@ -48,7 +48,7 @@ fn advance_left(numbers: &[i32], left: &mut usize) {
     }
 }
 
-fn advance_right(numbers: &[i32], right: &mut usize) {
+fn advance_right(numbers: &[i64], right: &mut usize) {
     let initial_right_value = numbers[*right];
 
     while numbers[*right] == initial_right_value && *right != 0 {

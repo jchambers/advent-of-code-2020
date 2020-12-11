@@ -8,7 +8,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     if let Some(path) = args.get(1) {
         let file = File::open(path)?;
 
-        let mut entries: Vec<i32> = io::BufReader::new(file).lines()
+        let mut entries: Vec<i64> = io::BufReader::new(file).lines()
             .filter_map(|line| line.unwrap().parse().ok())
             .collect();
 
