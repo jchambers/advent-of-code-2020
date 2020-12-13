@@ -91,15 +91,17 @@ impl SeatingMap {
         visible_occupied_seats
     }
 
-    fn get_next_round(&self) -> SeatingMap {
+    fn get_next_round<F>(&self, neighbor_threshold: u8, get_neighbor_fn: F) -> SeatingMap
+        where F: Fn(&SeatingMap, usize, usize) -> u8
+    {
         let mut spaces = Vec::with_capacity(self.spaces.len());
 
         for row in 0..self.height {
             for col in 0..self.width {
                 let cell = match self.cell_at(row, col) {
                     Floor => Floor,
-                    EmptySeat => { if self.get_adjacent_occupied_seats(row, col) == 0 { OccupiedSeat } else { EmptySeat} },
-                    OccupiedSeat => { if self.get_adjacent_occupied_seats(row, col) >= 4 { EmptySeat } else { OccupiedSeat} }
+                    EmptySeat => { if get_neighbor_fn(self, row, col) == 0 { OccupiedSeat } else { EmptySeat} },
+                    OccupiedSeat => { if get_neighbor_fn(self, row, col) >= neighbor_threshold { EmptySeat } else { OccupiedSeat} }
                 };
 
                 spaces.push(cell);
@@ -113,9 +115,19 @@ impl SeatingMap {
         }
     }
 
-    pub fn into_stable_configuration(mut self) -> SeatingMap {
+    pub fn into_stable_configuration_by_adjacency(self) -> SeatingMap {
+        self.into_stable_configuration(4, &SeatingMap::get_adjacent_occupied_seats)
+    }
+
+    pub fn into_stable_configuration_by_visibility(self) -> SeatingMap {
+        self.into_stable_configuration(5, &SeatingMap::get_visible_occupied_seats)
+    }
+
+    fn into_stable_configuration<F>(mut self, neighbor_threshold: u8, get_neighbor_fn: &F) -> SeatingMap
+        where F: Fn(&SeatingMap, usize, usize) -> u8
+    {
         loop {
-            let next = self.get_next_round();
+            let next = self.get_next_round(neighbor_threshold, get_neighbor_fn);
 
             if next == self {
                 return self;
@@ -214,11 +226,11 @@ mod test {
         let initial_map = seating::SeatingMap::from_layout(String::from(initial_layout));
         let next_round_map = seating::SeatingMap::from_layout(String::from(next_round_layout));
 
-        assert_eq!(next_round_map, initial_map.get_next_round());
+        assert_eq!(next_round_map, initial_map.get_next_round(4, SeatingMap::get_adjacent_occupied_seats));
     }
 
     #[test]
-    fn into_stable_configuration() {
+    fn into_stable_configuration_by_adjacency() {
         let initial_layout =
             "#.##.##.##\n\
              #######.##\n\
@@ -246,7 +258,39 @@ mod test {
         let initial_map = seating::SeatingMap::from_layout(String::from(initial_layout));
         let stable_map = seating::SeatingMap::from_layout(String::from(stable_layout));
 
-        assert_eq!(stable_map, initial_map.into_stable_configuration());
+        assert_eq!(stable_map, initial_map.into_stable_configuration_by_adjacency());
+    }
+
+    #[test]
+    fn into_stable_configuration_by_visibility() {
+        let initial_layout =
+            "#.##.##.##\n\
+             #######.##\n\
+             #.#.#..#..\n\
+             ####.##.##\n\
+             #.##.##.##\n\
+             #.#####.##\n\
+             ..#.#.....\n\
+             ##########\n\
+             #.######.#\n\
+             #.#####.##\n";
+
+        let stable_layout =
+            "#.L#.L#.L#\n\
+             #LLLLLL.LL\n\
+             L.L.L..#..\n\
+             ##L#.#L.L#\n\
+             L.L#.LL.L#\n\
+             #.LLLL#.LL\n\
+             ..#.L.....\n\
+             LLL###LLL#\n\
+             #.LLLLL#.L\n\
+             #.L#LL#.L#\n";
+
+        let initial_map = seating::SeatingMap::from_layout(String::from(initial_layout));
+        let stable_map = seating::SeatingMap::from_layout(String::from(stable_layout));
+
+        assert_eq!(stable_map, initial_map.into_stable_configuration_by_visibility());
     }
 
     #[test]
