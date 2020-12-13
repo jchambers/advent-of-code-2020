@@ -47,8 +47,8 @@ impl From<&Heading> for u8 {
     }
 }
 
-impl Instruction {
-    pub fn from(string: &str) -> Self {
+impl From<&str> for Instruction {
+    fn from(string: &str) -> Self {
         let magnitude:i32 = string[1..].parse().unwrap();
 
         match &string[0..1] {
@@ -214,7 +214,7 @@ mod test {
 
         {
             let instructions :Vec<Instruction> = vec!["F10", "N3", "F7", "R90", "F11"].iter()
-                .map(|string| Instruction::from(string))
+                .map(|string| Instruction::from(*string))
                 .collect();
 
             let mut position = FerryPosition::default();
