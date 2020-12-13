@@ -59,6 +59,38 @@ impl SeatingMap {
         occupied_neighbors
     }
 
+    fn get_visible_occupied_seats(&self, row: usize, col: usize) -> u8 {
+        let mut visible_occupied_seats = 0;
+
+        for delta_row in -1..=1 {
+            for delta_col in -1..=1 {
+                if delta_row == 0 && delta_col == 0 {
+                    continue;
+                }
+
+                let mut r = row as isize + delta_row;
+                let mut c = col as isize + delta_col;
+
+                while r >= 0 && r < self.height as isize && c >= 0 && c < self.width as isize {
+                    match self.cell_at(r as usize, c as usize) {
+                        OccupiedSeat => {
+                            visible_occupied_seats += 1;
+                            break;
+                        },
+
+                        EmptySeat => break,
+                        Floor => {},
+                    }
+
+                    r += delta_row;
+                    c += delta_col;
+                }
+            }
+        }
+
+        visible_occupied_seats
+    }
+
     fn get_next_round(&self) -> SeatingMap {
         let mut spaces = Vec::with_capacity(self.spaces.len());
 
@@ -234,5 +266,46 @@ mod test {
         let seating_map = seating::SeatingMap::from_layout(String::from(layout));
 
         assert_eq!(37, seating_map.get_occupied_seats());
+    }
+
+    #[test]
+    fn get_visible_occupied_seats() {
+        {
+            let layout =
+                ".......#.\n\
+                 ...#.....\n\
+                 .#.......\n\
+                 .........\n\
+                 ..#L....#\n\
+                 ....#....\n\
+                 .........\n\
+                 #........\n\
+                 ...#.....\n";
+
+            assert_eq!(8, seating::SeatingMap::from_layout(String::from(layout)).get_visible_occupied_seats(4, 3));
+        }
+
+        {
+            let layout =
+                ".............\n\
+                 .L.L.#.#.#.#.\n\
+                 .............\n";
+
+            assert_eq!(0, seating::SeatingMap::from_layout(String::from(layout)).get_visible_occupied_seats(1, 1));
+            assert_eq!(1, seating::SeatingMap::from_layout(String::from(layout)).get_visible_occupied_seats(1, 3));
+        }
+
+        {
+            let layout =
+                ".##.##.\n\
+                 #.#.#.#\n\
+                 ##...##\n\
+                 ...L...\n\
+                 ##...##\n\
+                 #.#.#.#\n\
+                 .##.##.\n";
+
+            assert_eq!(0, seating::SeatingMap::from_layout(String::from(layout)).get_visible_occupied_seats(3, 3));
+        }
     }
 }
