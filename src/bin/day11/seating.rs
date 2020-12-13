@@ -1,0 +1,238 @@
+use crate::seating::Cell::{EmptySeat, OccupiedSeat, Floor};
+
+#[derive(Debug, Eq, PartialEq)]
+pub struct SeatingMap {
+    width: usize,
+    height: usize,
+    spaces: Vec<Cell>,
+}
+
+#[derive(Debug, Eq, PartialEq)]
+enum Cell {
+    Floor,
+    EmptySeat,
+    OccupiedSeat
+}
+
+impl SeatingMap {
+    pub fn from_layout(layout: String) -> SeatingMap {
+        let width = layout.find('\n').unwrap();
+        let spaces: Vec<Cell> = layout.chars()
+            .filter(|c| c != &'\n')
+            .map(|c| match c {
+                'L' => EmptySeat,
+                '#' => OccupiedSeat,
+                _ => Floor,
+            }).collect();
+
+        let height = spaces.len() / width;
+
+        SeatingMap {
+            width,
+            height,
+            spaces
+        }
+    }
+
+    fn cell_at(&self, row: usize, col: usize) -> &Cell {
+        &self.spaces[(row * self.width) + col]
+    }
+
+    fn get_adjacent_occupied_seats(&self, row: usize, col: usize) -> u8 {
+        let min_row = if row == 0 { 0 } else { row - 1 };
+        let max_row = if row == self.height - 1 { self.height - 1 } else { row + 1 };
+        let min_col = if col == 0 { 0 } else { col - 1 };
+        let max_col = if col == self.width - 1 { self.width - 1 } else { col + 1 };
+
+        let mut occupied_neighbors = 0;
+
+        for r in min_row..=max_row {
+            for c in min_col..=max_col {
+                if r != row || c != col {
+                    if self.cell_at(r, c) == &OccupiedSeat {
+                        occupied_neighbors += 1;
+                    }
+                }
+            }
+        }
+
+        occupied_neighbors
+    }
+
+    fn get_next_round(&self) -> SeatingMap {
+        let mut spaces = Vec::with_capacity(self.spaces.len());
+
+        for row in 0..self.height {
+            for col in 0..self.width {
+                let cell = match self.cell_at(row, col) {
+                    Floor => Floor,
+                    EmptySeat => { if self.get_adjacent_occupied_seats(row, col) == 0 { OccupiedSeat } else { EmptySeat} },
+                    OccupiedSeat => { if self.get_adjacent_occupied_seats(row, col) >= 4 { EmptySeat } else { OccupiedSeat} }
+                };
+
+                spaces.push(cell);
+            }
+        };
+
+        SeatingMap {
+            width: self.width,
+            height: self.height,
+            spaces
+        }
+    }
+
+    pub fn into_stable_configuration(mut self) -> SeatingMap {
+        loop {
+            let next = self.get_next_round();
+
+            if next == self {
+                return self;
+            }
+
+            self = next;
+        }
+    }
+
+    pub fn get_occupied_seats(&self) -> usize {
+        self.spaces.iter().filter(|cell| cell == &&OccupiedSeat).count()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::seating;
+    use crate::seating::SeatingMap;
+    use crate::seating::Cell::{Floor, EmptySeat, OccupiedSeat};
+
+    #[test]
+    fn from_layout() {
+        let layout =
+            ".LL\n\
+             #.L\n";
+
+        let seating_map = seating::SeatingMap::from_layout(String::from(layout));
+
+        let expected = SeatingMap {
+            width: 3,
+            height: 2,
+            spaces: vec![Floor, EmptySeat, EmptySeat, OccupiedSeat, Floor, EmptySeat],
+        };
+
+        assert_eq!(expected, seating_map);
+    }
+
+    #[test]
+    fn cell_at() {
+        let layout =
+            ".LL\n\
+             #.L\n";
+
+        let seating_map = seating::SeatingMap::from_layout(String::from(layout));
+
+        assert_eq!(&Floor,        seating_map.cell_at(0, 0));
+        assert_eq!(&EmptySeat,    seating_map.cell_at(0, 1));
+        assert_eq!(&EmptySeat,    seating_map.cell_at(0, 2));
+        assert_eq!(&OccupiedSeat, seating_map.cell_at(1, 0));
+        assert_eq!(&Floor,        seating_map.cell_at(1, 1));
+        assert_eq!(&EmptySeat,    seating_map.cell_at(1, 2));
+    }
+
+    #[test]
+    fn get_adjacent_occupied_seats() {
+        let layout =
+            ".LL\n\
+             #.L\n";
+
+        let seating_map = seating::SeatingMap::from_layout(String::from(layout));
+
+        assert_eq!(1, seating_map.get_adjacent_occupied_seats(0, 0));
+        assert_eq!(1, seating_map.get_adjacent_occupied_seats(0, 1));
+        assert_eq!(0, seating_map.get_adjacent_occupied_seats(0, 2));
+        assert_eq!(0, seating_map.get_adjacent_occupied_seats(1, 0));
+        assert_eq!(1, seating_map.get_adjacent_occupied_seats(1, 1));
+        assert_eq!(0, seating_map.get_adjacent_occupied_seats(1, 2));
+    }
+
+    #[test]
+    fn get_next_round() {
+        let initial_layout =
+            "#.##.##.##\n\
+             #######.##\n\
+             #.#.#..#..\n\
+             ####.##.##\n\
+             #.##.##.##\n\
+             #.#####.##\n\
+             ..#.#.....\n\
+             ##########\n\
+             #.######.#\n\
+             #.#####.##\n";
+
+        let next_round_layout =
+            "#.LL.L#.##\n\
+             #LLLLLL.L#\n\
+             L.L.L..L..\n\
+             #LLL.LL.L#\n\
+             #.LL.LL.LL\n\
+             #.LLLL#.##\n\
+             ..L.L.....\n\
+             #LLLLLLLL#\n\
+             #.LLLLLL.L\n\
+             #.#LLLL.##\n";
+
+        let initial_map = seating::SeatingMap::from_layout(String::from(initial_layout));
+        let next_round_map = seating::SeatingMap::from_layout(String::from(next_round_layout));
+
+        assert_eq!(next_round_map, initial_map.get_next_round());
+    }
+
+    #[test]
+    fn into_stable_configuration() {
+        let initial_layout =
+            "#.##.##.##\n\
+             #######.##\n\
+             #.#.#..#..\n\
+             ####.##.##\n\
+             #.##.##.##\n\
+             #.#####.##\n\
+             ..#.#.....\n\
+             ##########\n\
+             #.######.#\n\
+             #.#####.##\n";
+
+        let stable_layout =
+            "#.#L.L#.##\n\
+             #LLL#LL.L#\n\
+             L.#.L..#..\n\
+             #L##.##.L#\n\
+             #.#L.LL.LL\n\
+             #.#L#L#.##\n\
+             ..L.L.....\n\
+             #L#L##L#L#\n\
+             #.LLLLLL.L\n\
+             #.#L#L#.##\n";
+
+        let initial_map = seating::SeatingMap::from_layout(String::from(initial_layout));
+        let stable_map = seating::SeatingMap::from_layout(String::from(stable_layout));
+
+        assert_eq!(stable_map, initial_map.into_stable_configuration());
+    }
+
+    #[test]
+    fn get_occupied_seats() {
+        let layout =
+            "#.#L.L#.##\n\
+             #LLL#LL.L#\n\
+             L.#.L..#..\n\
+             #L##.##.L#\n\
+             #.#L.LL.LL\n\
+             #.#L#L#.##\n\
+             ..L.L.....\n\
+             #L#L##L#L#\n\
+             #.LLLLLL.L\n\
+             #.#L#L#.##\n";
+
+        let seating_map = seating::SeatingMap::from_layout(String::from(layout));
+
+        assert_eq!(37, seating_map.get_occupied_seats());
+    }
+}
