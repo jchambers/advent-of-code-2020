@@ -1,0 +1,87 @@
+939 mod 7 => 1
+939 mod 13 => 3
+
+939 / 3 => 313
+
+7, 13
+
+T % 7  = 0
+T % 13 = 1
+
+T_1 = 14
+
+Happens again at 7 * 13 + 14?
+
+(7 * 13) + 14 mod 7 => 0
+(7 * 13) + 14 mod 13 => 1
+
+(7 * 13 * 2) + 14 mod 7 => 0
+(7 * 13 * 5) + 14 mod 13 => 1
+
+(7 * 13 + 14) * 2 mod 7 => 0
+(7 * 13 + 14) * 14 mod 13 => 1
+
+7,13,x,x,59,x,31,19
+
+Rough algorithm:
+
+- Start at zero(?)
+- Add 7 until we find 7n % 13 = 1
+- Save that first intersection as…?
+- We know that we'll have T % 7 = 0, T % 13 = 1 at (7 * 13)k + 14
+- Start at zero(?)
+- Increase k until we find ((7 * 13)k + 14) % 59 = 4
+
+T  | 3 | 5 |
+0  | D | D |
+1  |   |   |
+2  |   |   |
+3  | D |   |
+4  |   |   |
+5  |   | D |
+6  | D |   |
+7  |   |   |
+8  |   |   |
+9  | D |   |
+10 |   | D |
+11 |   |   |
+12 | D |   |
+13 |   |   |
+14 |   |   |
+15 | D | D |
+16 |   |   |
+17 |   |   |
+18 | D |   |
+19 |   |   |
+20 |   | D |
+21 | D |   |
+22 |   |   |
+23 |   |   |
+24 | D |   |
+25 |   | D |
+26 |   |   |
+27 | D |   |
+28 |   |   |
+29 |   |   |
+30 | D | D |
+
+So we're finding a time of first alignment (9), which then repeats with a period of a * b.
+
+I THINK it should be true that we then find the NEXT point of alignment when we add another bus route, then have a new offset and period (a * b * c).
+
+17,x,13,19
+
+119 mod 17 => 0
+119 mod 13 => 2
+
+(119 + 221) mod 17 => 0
+(119 + 221) mod 13 => 2
+
+782 mod 17 => 0
+782 mod 13 => 2
+782 mod 19 => 3
+
+
+Waaaaaaaait wait wait. This is all wrong. Just going straight for the mod does NOT give us the wait time. We actually need to be doing: timestamp + route - (timestamp % route). Find-and-step still seems right; just need to be finding the right thing.
+
+102 mod 17 => 0
