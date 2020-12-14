@@ -4,7 +4,7 @@ use crate::navigation::Instruction::{Translate, Rotate, Forward};
 pub struct FerryPosition {
     pub x: i32,
     pub y: i32,
-    pub heading: (i32, i32)
+    pub heading: (i32, i32),
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -57,7 +57,7 @@ impl From<&str> for Instruction {
 
 impl FerryPosition {
 
-    pub fn apply<I>(&mut self, instructions: I)
+    pub fn apply_ferry<I>(&mut self, instructions: I)
         where I: Iterator<Item = Instruction>
     {
         for instruction in instructions {
@@ -65,6 +65,31 @@ impl FerryPosition {
                 Translate(heading, magnitude) => {
                     self.x += heading.0 * magnitude;
                     self.y += heading.1 * magnitude;
+                },
+
+                Rotate(angle) => {
+                    let x_hat = (self.heading.0 * air_quotes_cosine(angle)) - (self.heading.1 * air_quotes_sine(angle));
+                    let y_hat = (self.heading.0 * air_quotes_sine(angle)) + (self.heading.1 * air_quotes_cosine(angle));
+
+                    self.heading = (x_hat, y_hat);
+                },
+
+                Forward(magnitude) => {
+                    self.x += self.heading.0 * magnitude;
+                    self.y += self.heading.1 * magnitude;
+                },
+            };
+        }
+    }
+
+    pub fn apply_waypoint<I>(&mut self, instructions: I)
+        where I: Iterator<Item = Instruction>
+    {
+        for instruction in instructions {
+            match instruction {
+                Translate(heading, magnitude) => {
+                    self.heading.0 += heading.0 * magnitude;
+                    self.heading.1 += heading.1 * magnitude;
                 },
 
                 Rotate(angle) => {
@@ -111,10 +136,10 @@ mod test {
     }
 
     #[test]
-    fn ferry_position_apply() {
+    fn ferry_position_apply_ferry() {
         {
             let mut position = FerryPosition::default();
-            position.apply(vec![Translate((0, 1), 2)].into_iter());
+            position.apply_ferry(vec![Translate((0, 1), 2)].into_iter());
 
             let expected = FerryPosition {
                 x: 0,
@@ -127,7 +152,7 @@ mod test {
 
         {
             let mut position = FerryPosition::default();
-            position.apply(vec![Translate((0, -1), 2)].into_iter());
+            position.apply_ferry(vec![Translate((0, -1), 2)].into_iter());
 
             let expected = FerryPosition {
                 x: 0,
@@ -140,7 +165,7 @@ mod test {
 
         {
             let mut position = FerryPosition::default();
-            position.apply(vec![Translate((1, 0), 2)].into_iter());
+            position.apply_ferry(vec![Translate((1, 0), 2)].into_iter());
 
             let expected = FerryPosition {
                 x: 2,
@@ -153,7 +178,7 @@ mod test {
 
         {
             let mut position = FerryPosition::default();
-            position.apply(vec![Translate((-1, 0), 2)].into_iter());
+            position.apply_ferry(vec![Translate((-1, 0), 2)].into_iter());
 
             let expected = FerryPosition {
                 x: -2,
@@ -166,7 +191,7 @@ mod test {
 
         {
             let mut position = FerryPosition::default();
-            position.apply(vec![Forward(7)].into_iter());
+            position.apply_ferry(vec![Forward(7)].into_iter());
 
             let expected = FerryPosition {
                 x: 7,
@@ -181,16 +206,16 @@ mod test {
             let mut position = FerryPosition::default();
             assert_eq!((1, 0), position.heading);
 
-            position.apply(vec![Rotate(-90)].into_iter());
+            position.apply_ferry(vec![Rotate(-90)].into_iter());
             assert_eq!((0, -1), position.heading);
 
-            position.apply(vec![Rotate(-90)].into_iter());
+            position.apply_ferry(vec![Rotate(-90)].into_iter());
             assert_eq!((-1, 0), position.heading);
 
-            position.apply(vec![Rotate(-90)].into_iter());
+            position.apply_ferry(vec![Rotate(-90)].into_iter());
             assert_eq!((0, 1), position.heading);
 
-            position.apply(vec![Rotate(270)].into_iter());
+            position.apply_ferry(vec![Rotate(270)].into_iter());
             assert_eq!((1, 0), position.heading);
         }
 
@@ -200,7 +225,7 @@ mod test {
                 .collect();
 
             let mut position = FerryPosition::default();
-            position.apply(instructions.into_iter());
+            position.apply_ferry(instructions.into_iter());
 
             let expected = FerryPosition {
                 x: 17,
@@ -210,5 +235,28 @@ mod test {
 
             assert_eq!(expected, position);
         }
+    }
+
+    #[test]
+    fn ferry_position_apply_waypoint() {
+        let instructions :Vec<Instruction> = vec!["F10", "N3", "F7", "R90", "F11"].iter()
+            .map(|string| Instruction::from(*string))
+            .collect();
+
+        let mut position = FerryPosition {
+            x: 0,
+            y: 0,
+            heading: (10, 1),
+        };
+
+        position.apply_waypoint(instructions.into_iter());
+
+        let expected = FerryPosition {
+            x: 214,
+            y: -72,
+            heading: (4, -10)
+        };
+
+        assert_eq!(expected, position);
     }
 }
