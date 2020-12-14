@@ -15,6 +15,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         let rules: BagRules = lines.collect();
 
         println!("Potential containers for shiny gold bags: {}", rules.get_top_level_containers(&String::from("shiny gold")));
+        println!("Shiny gold bags contain {} other bags", rules.get_total_contained_bags(&String::from("shiny gold")));
     } else {
         simple_error::bail!("Usage: day07 INPUT_FILE_PATH");
     }

@@ -48,6 +48,16 @@ impl BagRules {
 
         false
     }
+
+    pub fn get_total_contained_bags(&self, bag: &String) -> u32 {
+        if let Some(contained_bags) = self.rules.get(bag) {
+            contained_bags.iter()
+                .map(|(contained_bag, quantity)| quantity * (1 + self.get_total_contained_bags(contained_bag)))
+                .sum()
+        } else {
+            0
+        }
+    }
 }
 
 impl FromIterator<String> for BagRules {
@@ -95,21 +105,22 @@ mod test {
             rules: expected_rules
         };
 
-        let rules: BagRules = vec!["light red bags contain 1 bright white bag, 2 muted yellow bags."].into_iter().collect();
+        let rules: BagRules = vec![String::from("light red bags contain 1 bright white bag, 2 muted yellow bags.")].into_iter().collect();
 
         assert_eq!(expected, rules);
     }
 
+    #[test]
     fn has_path() {
-        let rules: BagRules = vec!["light red bags contain 1 bright white bag, 2 muted yellow bags.",
-                                   "dark orange bags contain 3 bright white bags, 4 muted yellow bags.",
-                                   "bright white bags contain 1 shiny gold bag.",
-                                   "muted yellow bags contain 2 shiny gold bags, 9 faded blue bags.",
-                                   "shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags.",
-                                   "dark olive bags contain 3 faded blue bags, 4 dotted black bags.",
-                                   "vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.",
-                                   "faded blue bags contain no other bags.",
-                                   "dotted black bags contain no other bags.",].into_iter().collect();
+        let rules: BagRules = vec![String::from("light red bags contain 1 bright white bag, 2 muted yellow bags."),
+                                   String::from("dark orange bags contain 3 bright white bags, 4 muted yellow bags."),
+                                   String::from("bright white bags contain 1 shiny gold bag."),
+                                   String::from("muted yellow bags contain 2 shiny gold bags, 9 faded blue bags."),
+                                   String::from("shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags."),
+                                   String::from("dark olive bags contain 3 faded blue bags, 4 dotted black bags."),
+                                   String::from("vibrant plum bags contain 5 faded blue bags, 6 dotted black bags."),
+                                   String::from("faded blue bags contain no other bags."),
+                                   String::from("dotted black bags contain no other bags."),].into_iter().collect();
 
         assert_eq!(true, rules.has_path(&String::from("light red"), &String::from("shiny gold")));
         assert_eq!(true, rules.has_path(&String::from("dark orange"), &String::from("shiny gold")));
@@ -122,17 +133,47 @@ mod test {
         assert_eq!(false, rules.has_path(&String::from("dotted black"), &String::from("shiny gold")));
     }
 
+    #[test]
     fn get_top_level_containers() {
-        let rules: BagRules = vec!["light red bags contain 1 bright white bag, 2 muted yellow bags.",
-                                   "dark orange bags contain 3 bright white bags, 4 muted yellow bags.",
-                                   "bright white bags contain 1 shiny gold bag.",
-                                   "muted yellow bags contain 2 shiny gold bags, 9 faded blue bags.",
-                                   "shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags.",
-                                   "dark olive bags contain 3 faded blue bags, 4 dotted black bags.",
-                                   "vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.",
-                                   "faded blue bags contain no other bags.",
-                                   "dotted black bags contain no other bags.",].into_iter().collect();
+        let rules: BagRules = vec![String::from("light red bags contain 1 bright white bag, 2 muted yellow bags."),
+                                   String::from("dark orange bags contain 3 bright white bags, 4 muted yellow bags."),
+                                   String::from("bright white bags contain 1 shiny gold bag."),
+                                   String::from("muted yellow bags contain 2 shiny gold bags, 9 faded blue bags."),
+                                   String::from("shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags."),
+                                   String::from("dark olive bags contain 3 faded blue bags, 4 dotted black bags."),
+                                   String::from("vibrant plum bags contain 5 faded blue bags, 6 dotted black bags."),
+                                   String::from("faded blue bags contain no other bags."),
+                                   String::from("dotted black bags contain no other bags."),].into_iter().collect();
 
         assert_eq!(4, rules.get_top_level_containers(&String::from("shiny gold")));
+    }
+
+    #[test]
+    fn get_total_contained_bags() {
+        {
+            let rules: BagRules = vec![String::from("light red bags contain 1 bright white bag, 2 muted yellow bags."),
+                                       String::from("dark orange bags contain 3 bright white bags, 4 muted yellow bags."),
+                                       String::from("bright white bags contain 1 shiny gold bag."),
+                                       String::from("muted yellow bags contain 2 shiny gold bags, 9 faded blue bags."),
+                                       String::from("shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags."),
+                                       String::from("dark olive bags contain 3 faded blue bags, 4 dotted black bags."),
+                                       String::from("vibrant plum bags contain 5 faded blue bags, 6 dotted black bags."),
+                                       String::from("faded blue bags contain no other bags."),
+                                       String::from("dotted black bags contain no other bags."),].into_iter().collect();
+
+            assert_eq!(32, rules.get_total_contained_bags(&String::from("shiny gold")));
+        }
+
+        {
+            let rules: BagRules = vec![String::from("shiny gold bags contain 2 dark red bags."),
+                                       String::from("dark red bags contain 2 dark orange bags."),
+                                       String::from("dark orange bags contain 2 dark yellow bags."),
+                                       String::from("dark yellow bags contain 2 dark green bags."),
+                                       String::from("dark green bags contain 2 dark blue bags."),
+                                       String::from("dark blue bags contain 2 dark violet bags."),
+                                       String::from("dark violet bags contain no other bags."),].into_iter().collect();
+
+            assert_eq!(126, rules.get_total_contained_bags(&String::from("shiny gold")));
+        }
     }
 }
