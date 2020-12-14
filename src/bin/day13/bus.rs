@@ -1,16 +1,16 @@
 #[derive(Debug, Eq, PartialEq)]
 pub struct BusSchedule {
-    routes: Vec<Option<u32>>
+    routes: Vec<Option<u64>>
 }
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct RouteRecommendation {
-    pub route: u32,
-    pub arrival: u32
+    pub route: u64,
+    pub arrival: u64
 }
 
 impl BusSchedule {
-    pub fn get_first_route_arriving_after_time(&self, timestamp: u32) -> RouteRecommendation {
+    pub fn get_first_route_arriving_after_time(&self, timestamp: u64) -> RouteRecommendation {
         let mut earliest_arrival = 0xffffffff;
         let mut ealiest_route = 0;
 
@@ -31,12 +31,40 @@ impl BusSchedule {
         }
     }
 
-    fn get_next_arrival(timestamp: u32, route: u32) -> u32 {
+    fn get_next_arrival(timestamp: u64, route: u64) -> u64 {
         if timestamp % route == 0 {
             timestamp
         } else {
             timestamp + route - (timestamp % route)
         }
+    }
+
+    pub fn get_wait_time(timestamp: u64, route: u64) -> u64 {
+        if timestamp % route == 0 {
+            0
+        } else {
+            route - (timestamp % route)
+        }
+    }
+
+    pub fn get_alignment_timestamp(&self) -> u64 {
+        let mut offset = 0;
+        let mut step = 1;
+
+        for i in 0..self.routes.len() {
+            if let Some(route) = self.routes[i] {
+                let mut k = 1;
+
+                while Self::get_wait_time(offset + (step * k), route) != (i as u64 % route) {
+                    k += 1;
+                }
+
+                offset += step * k;
+                step *= route;
+            }
+        }
+
+        offset
     }
 }
 
@@ -82,5 +110,14 @@ mod test {
         };
 
         assert_eq!(expected, schedule.get_first_route_arriving_after_time(939));
+    }
+
+    #[test]
+    fn get_alignment_timestamp() {
+        assert_eq!(3417, BusSchedule::from("17,x,13,19").get_alignment_timestamp());
+        assert_eq!(754018, BusSchedule::from("67,7,59,61").get_alignment_timestamp());
+        assert_eq!(779210, BusSchedule::from("67,x,7,59,61").get_alignment_timestamp());
+        assert_eq!(1261476, BusSchedule::from("67,7,x,59,61").get_alignment_timestamp());
+        assert_eq!(1202161486, BusSchedule::from("1789,37,47,1889").get_alignment_timestamp());
     }
 }
