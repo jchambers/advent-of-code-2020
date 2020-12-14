@@ -1,6 +1,6 @@
 #[derive(Debug, Eq, PartialEq)]
 pub struct BusSchedule {
-    routes: Vec<u32>
+    routes: Vec<Option<u32>>
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -15,11 +15,13 @@ impl BusSchedule {
         let mut ealiest_route = 0;
 
         for route in &self.routes {
-            let next_arrival = Self::get_next_arrival(timestamp, *route);
+            if let Some(route) = route {
+                let next_arrival = Self::get_next_arrival(timestamp, *route);
 
-            if next_arrival < earliest_arrival {
-                earliest_arrival = next_arrival;
-                ealiest_route = *route;
+                if next_arrival < earliest_arrival {
+                    earliest_arrival = next_arrival;
+                    ealiest_route = *route;
+                }
             }
         }
 
@@ -42,7 +44,7 @@ impl From<&str> for BusSchedule {
     fn from(string: &str) -> Self {
         BusSchedule {
             routes: string.split(',')
-                .filter_map(|route| { route.parse().ok() })
+                .map(|route| { route.parse().ok() })
                 .collect()
         }
     }
@@ -55,7 +57,7 @@ mod test {
     #[test]
     fn bus_schedule_from_string() {
         let expected = BusSchedule {
-            routes: vec![7, 13, 59, 31, 19]
+            routes: vec![Some(7), Some(13), None, None, Some(59), None, Some(31), Some(19)]
         };
 
         assert_eq!(expected, BusSchedule::from("7,13,x,x,59,x,31,19"));
